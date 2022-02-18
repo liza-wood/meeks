@@ -15,7 +15,7 @@ scimago <- data.frame(sjr_journals) %>%
 # Section 5.2.1 ITS & Climate transportation documents' journals
 # ---------------------------------------------------------------------#
 
-df <- readRDS("code/descriptives/transport_policy/clean-df.RDS")
+df <- readRDS("data/clean-df.RDS")
 
 # ---------------------------------------------------------------------#
 # Each subject summary for text
@@ -255,7 +255,7 @@ unique(agencymatch.top$sum[agencymatch.top$doc_owner_agency_level == "State"])/n
 unique(agencymatch.top$sum[agencymatch.top$doc_owner_agency_level == "Regional"])/nrow(identified.df[identified.df$doc_owner_agency_level == "Regional"])
 unique(agencymatch.top$sum[agencymatch.top$doc_owner_agency_level == "County"])/nrow(identified.df[identified.df$doc_owner_agency_level == "County"])
 
-# In text: top agenices across all levels 
+# In text: top agencies across all levels 
 agencymatch.count <- df %>% 
   filter(agency_citation == T) %>% 
   group_by(cit_agency_author_specific) %>% count() %>% 
@@ -263,45 +263,3 @@ agencymatch.count <- df %>%
   mutate(sum = sum(n)) %>% 
   mutate(prop = n/sum)
 
-# ---------------------------------------------------------------------#
-# Figure 6. Scimago ranking plot
-# ---------------------------------------------------------------------#
-
-citrank.count <- df %>% 
-  filter(journalpub_match == T, !is.na(avg_sjr)) %>% 
-  group_by(cit_journal, avg_sjr) %>% count() 
-
-top8journals <- journalmatch.count.if %>% 
-  group_by(doc_owner_agency_level) %>% 
-  select(-sum) %>% 
-  top_n(5) %>% 
-  ungroup() %>% 
-  select(cit_journal) %>% 
-  unique()
-
-citrank.count$top8 <- ifelse(citrank.count$cit_journal %in% top8journals$cit_journal, "Top-referenced journals", "Other journals")
-table(citrank.count$top8)
-citrank.count$top8 <- factor(citrank.count$top8, levels = c("Top-referenced journals", "Other journals"))
-
-# Figure 6.
-
-# Range of impact factors
-citrank.count %>% 
-  ggplot(aes(x = avg_sjr, y = n)) + 
-  geom_point(aes(fill = top8), color = "black", alpha = 0.7, pch = 21, size = 2) +
-  scale_fill_manual(values = c("black", "white")) + 
-  #geom_smooth(method = "lm", color = "black") +
-  xlim(0,30) + 
-  ylim(0,210) +
-  theme_classic() +
-  theme(#legend.position = "none",
-    text= element_text(size=14, family="Times"), 
-    axis.text = element_text(hjust = .6, size=14),
-    plot.title = element_text(hjust = .5, vjust = 0, size = 16), 
-    strip.background  = element_blank()) +
-  labs(x = "Average journal ranking (SJR)", 
-       y = "Number of citations",
-       fill = "")
-
-# Figure 6 saving
-ggsave(filename = "plots/fig6_sjr_by_citation_emerging.png", width = 6, height = 3)
