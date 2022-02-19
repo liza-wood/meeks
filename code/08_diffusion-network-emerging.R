@@ -23,12 +23,14 @@ edge.list <- identified.df %>%
   )) %>% 
   select(doc_owner_agency, reference)
 
-edge.list$doc_owner_agency[edge.list$doc_owner_agency == "Caltrans"] <- "California Department of Transportation"
-
 edge.list.w <- edge.list %>% 
   group_by(doc_owner_agency, reference) %>% count()
 table(edge.list.w$n)
-edge.list.w <- filter(edge.list.w, n > 2)
+edge.list.w <- filter(edge.list.w, n ==1 ) %>% select(-n)
+edge.list <- edge.list %>% anti_join(edge.list.w)
+
+edge.list$doc_owner_agency[edge.list$doc_owner_agency == "California Department of Transportation"]
+edge.list$reference[edge.list$reference == "California Department of Transportation"] <- "Caltrans"
 
 nodes.doc.owners <- identified.df %>% 
   select(doc_owner_agency, doc_owner_agency_level) %>% 
@@ -36,8 +38,8 @@ nodes.doc.owners <- identified.df %>%
   mutate("sjr" = NA)
 colnames(nodes.doc.owners) <- c("name", "agency_level", "sjr")
 
+nodes.doc.owners$name[nodes.doc.owners$name == "California Department of Transportation"] <- "Caltrans"
 nodes.doc.owners$agency_level[nodes.doc.owners$name == "Caltrans"] <- "State (CA)"
-nodes.doc.owners$name[nodes.doc.owners$name == "Caltrans"] <- "California Department of Transportation"
 
 nodes.agency.cits <- agency.df %>% 
   filter(!is.na(cit_agency_author_specific)) %>% 
@@ -58,7 +60,7 @@ colnames(nodes.journal.cits) <- c("name", "agency_level", "sjr")
 node.list <- rbind(nodes.doc.owners, nodes.agency.cits, nodes.journal.cits)
 node.list <- distinct(node.list)
 
-net <- graph_from_data_frame(d = edge.list.w, vertices = node.list, directed = T) 
+net <- graph_from_data_frame(d = edge.list, vertices = node.list, directed = T) 
 clr <- RColorBrewer::brewer.pal(n = 8, name = "Set2")
 grey <- brewer.pal(8, "Greys")
 
@@ -79,20 +81,21 @@ table(V(net)$indeg)
 V(net)$outdeg <- log(igraph::degree(net, mode="out")) +.5
 table(V(net)$outdeg)
 
-V(net)$inlabel <- unname(ifelse(V(net)$indeg > 1.8, names(V(net)), "")) 
-V(net)$outlabel <- unname(ifelse(V(net)$outdeg > 2.2, names(V(net)), "")) 
+V(net)$inlabel <- unname(ifelse(V(net)$indeg > 3.8, names(V(net)), "")) 
+V(net)$outlabel <- unname(ifelse(V(net)$outdeg > 3.9, names(V(net)), "")) 
 V(net)$label.color = "black"
-V(net)$inlabel.size = ifelse(V(net)$indeg > 1.8, V(net)$indeg, 0)
-V(net)$outlabel.size = ifelse(V(net)$outdeg > 2.2, V(net)$outdeg, 0)
+V(net)$inlabel.size = ifelse(V(net)$indeg > 3.8, V(net)$indeg/2, 0)
+V(net)$outlabel.size = ifelse(V(net)$outdeg > 3.9, V(net)$outdeg/2, 0)
 
 
 # Before choosing those with n >1, it was all one component, now I zero in on just the main component
 V(net)$comp <- igraph::components(net)$membership
 table(V(net)$comp)
 main <- induced_subgraph(net, V(net)$comp == 1)
-V(main)$core <- coreness(main)
+V(main)$core <- coreness(main, mode = "in")
 table(V(main)$core)
-main <- induced_subgraph(main, V(main)$core %in% c(3:4))
+sum(table(V(main)$core)[-c(1)])/sum(table(V(main)$core)) # the inner 78%
+main <- induced_subgraph(main, V(main)$core %in% c(2:31))
 
 # In degree: who is getting cited?
 ggraph(main, layout = "lgl") +
