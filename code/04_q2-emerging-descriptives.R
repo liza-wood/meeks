@@ -37,7 +37,7 @@ agency.its %>% select(cit_agency_author_specific) %>% unique() %>% nrow() # 41 u
 
 # Quick review of each subject
 cc <- df %>% 
-  filter(doc_subject == "Climate, Envt. & Sust.")
+  filter(doc_subject == "Climate & Sustainability")
 
 # number of total
 cc %>% select(doc.id) %>% unique() %>% nrow()
@@ -55,7 +55,7 @@ agency.cc %>% select(cit_agency_author_specific) %>% unique() %>% nrow() # 94 un
 # ---------------------------------------------------------------------#
 df <- df %>% 
   filter(doc_subject == "Intelligent Transportation Systems" | 
-         doc_subject == "Climate, Envt. & Sust.")
+         doc_subject == "Climate & Sustainability")
 
 identified.df <- df %>% filter(identified.citation == T) 
 journal.df <- identified.df %>% filter(journalpub_match == T) 

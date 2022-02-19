@@ -9,7 +9,7 @@ df <- readRDS("data/clean-df.RDS")
 
 df <- df %>% 
   filter(doc_subject != "Intelligent Transportation Systems" & 
-           doc_subject != "Climate, Envt. & Sust.")
+           doc_subject != "Climate & Sustainability")
 
 df$cit_agency_author_specific[df$cit_agency_author_specific == "California Department of Transportation"] <- "Caltrans"
 df$cit_agency_author_specific[df$cit_agency_author_specific == "Air Resources Board"] <- "CA ARB"

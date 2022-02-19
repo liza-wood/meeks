@@ -5,6 +5,7 @@ library(data.table)
 
 df <- fread("/Users/lizawood/Box/truckee/data/journal_descriptives_data/citations_theme_docmetadata_agencyclean.csv")
 
+df$doc_subject[df$doc_subject == "Climate, Envt. & Sust."] <- "Climate & Sustainability"
 
 # ---------------------------------------------------------------------#
 # Create NAs where there are blanks, except for in the date column
@@ -48,7 +49,6 @@ df$journalpub_match <- ifelse(df$cit_journal %in% onewords, F,
 # ---------------------------------------------------------------------#
 # Correcting any off years
 # ---------------------------------------------------------------------#
-lubridate::as
 df$cit_year <- as.numeric(df$cit_year)
 df$doc_created_yr <- year(df$doc_created)
 ##  I have also looked at years and there are a few documents with the year 2106. I will look these up by hand to amend.

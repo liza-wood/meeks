@@ -9,7 +9,7 @@ df <- readRDS("data/clean-df.RDS")
 
 df <- df %>% 
   filter(doc_subject == "Intelligent Transportation Systems" | 
-           doc_subject == "Climate, Envt. & Sust.")
+           doc_subject == "Climate & Sustainability")
 
 identified.df <- df %>% filter(identified.citation == T) 
 journal.df <- identified.df %>% filter(journalpub_match == T) 
