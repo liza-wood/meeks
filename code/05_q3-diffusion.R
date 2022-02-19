@@ -1,24 +1,50 @@
-# 7. Q4. ---- WHERE DOES SCIENTIFIC INFORMATION ENTER? ----
-# Q4: Where does scientific information about these emerging issues appear to enter into the state transportation policy subsystem
+library(tidyverse)
+library(cowplot)
+library(data.table)
+library(RColorBrewer)
+library(igraph)
+library(ggraph)
+source("code/functions.R")
+
+df <- readRDS("data/clean-df.RDS")
+
+# Updating names to make the plot better
 df$cit_journal[df$cit_journal == "Transportation Research Part A: Policy and Practice"] <- "Transportation Research Pt. A"
 df$cit_journal[df$cit_journal == "Transportation Research Part B: Methodological"] <- "Transportation Research Pt. B"
 df$cit_journal[df$cit_journal == "Transportation Research Part C: Emerging Technologies"] <- "Transportation Research Pt. C"
 df$cit_journal[df$cit_journal == "Renewable and Sustainable Energy Reviews"] <- "Renewable & Sustainable Energy Review"
 df$cit_journal[df$cit_journal == "Transportation\nResearch Record"] <- "Transportation Research Record"
 df$cit_journal[df$cit_journal == "Journal of Geotechnical and Geoenvironmental Engineering  ASCE"] <- "J. of Geotech. & Geoenvt. Engin."
-df$cit_journal[df$cit_journal == "Journal of the American\nPlanning Asscn."] <- "J. of the Amer. Planning Assn."
+df$cit_journal[df$cit_journal == "Journal of the American Planning Association"] <- "J. of the Amer. Planning Assn."
 df$cit_journal[df$cit_journal == "Journal of Transportation Engineering"] <- "J. of Transportation Engin."
 df$cit_journal[df$cit_journal == "Journal of Structural Engineering"] <- "J. of Structural Engin."
 df$cit_journal[df$cit_journal == "American Journal of Public Health"] <- "American J. of Public Health"
 df$cit_journal[df$cit_journal == "Accident and Analysis Prevention"] <- "Accident & Analysis Prevention"
 df$cit_journal[df$cit_journal == "Cement and Concrete Research"] <- "Cement & Concrete Research"
 
-agency.df$cit_agency_author_specific[agency.df$cit_agency_author_specific == "Butte County Association of Governments"] <- "Butte COG"
-agency.df$cit_agency_author_specific[agency.df$cit_agency_author_specific == "Kern Council of Governments"] <- "Kern COG"
-agency.df$cit_agency_author_specific[agency.df$cit_agency_author_specific == "Stanislaus Council of Governments"] <- "Stanislaus COG"
-agency.df$cit_agency_author_specific[agency.df$cit_agency_author_specific == "Department of Water Resources"] <- "CA DWR"
-agency.df$cit_agency_author_specific[agency.df$cit_agency_author_specific == "California Transportation Commission"] <- "CA Transportation Commission"
-agency.df$cit_agency_author_specific[agency.df$cit_agency_author_specific == "Southern California Association of Governments"] <- "SCAG"
+
+df$cit_agency_author_specific[df$cit_agency_author_specific == "Butte County Association of Governments"] <- "Butte COG"
+df$cit_agency_author_specific[df$cit_agency_author_specific == "Kern Council of Governments"] <- "Kern COG"
+df$cit_agency_author_specific[df$cit_agency_author_specific == "Stanislaus Council of Governments"] <- "Stanislaus COG"
+df$cit_agency_author_specific[df$cit_agency_author_specific == "Department of Water Resources"] <- "CA DWR"
+df$cit_agency_author_specific[df$cit_agency_author_specific == "California Transportation Commission"] <- "CA Transportation Commission"
+df$cit_agency_author_specific[df$cit_agency_author_specific == "Southern California Association of Governments"] <- "SCAG"
+df$cit_agency_author_specific[df$cit_agency_author_specific == "California Department of Transportation"] <- "Caltrans"
+df$cit_agency_author_specific[df$cit_agency_author_specific == "Air Resources Board"] <- "CA ARB"
+df$cit_agency_author_specific[df$cit_agency_author_specific == "Census Bureau"] <- "US Census Bureau"
+df$cit_agency_author_specific[df$cit_agency_author_specific == "Department of Transportation"] <- "US DOT"
+df$cit_agency_author_specific[df$cit_agency_author_specific == "California Department of Education"] <- "CA Dept. of Education"
+df$cit_agency_author_specific[df$cit_agency_author_specific == "California Energy Commission"] <- "CA Energy Commission"
+df$cit_agency_author_specific [df$cit_agency_author_specific == "Environmental Protection Agency"] <- "US EPA"
+df$cit_agency_author_specific [df$cit_agency_author_specific == "Federal Highway Administration"] <- "US FHWA"
+df$cit_agency_author_specific [df$cit_agency_author_specific == "Butte County Association of Governments"] <- "Butte COG"
+df$cit_agency_author_specific [df$cit_agency_author_specific == "University of California"] <- "University of CA"
+df$cit_agency_author_specific [df$cit_agency_author_specific == "Department of Energy"] <- "US Dept. of Energy"
+df$cit_agency_author_specific [df$cit_agency_author_specific == "Fish and Wildlife Service"] <- "US FWS"
+
+identified.df <- df %>% filter(identified.citation == T) 
+journal.df <- identified.df %>% filter(journalpub_match == T) 
+agency.df <- identified.df %>% filter(agency_citation == T) 
 
 # I wanted to see if the state had earlier scientific use, but they don't
 cityear.diff.ag <- identified.df %>%
@@ -28,130 +54,174 @@ cityear.diff.ag <- identified.df %>%
   group_by(doc_owner_agency_level) %>% 
   summarize(mean = mean(lagtime, na.rm = T), median = median(lagtime, na.rm = T))
 
-
 agency.counts <- agency.df %>% 
   filter(!is.na(cit_agency_author_specific)) %>% 
   group_by(doc_owner_agency_level, cit_agency_author_specific, cit_agency_author_level) %>% 
   count(cit_agency_author_specific) %>% 
   rename("count" = "n") %>% 
   ungroup() %>% 
-  mutate(total = sum(count)) %>% 
-  ungroup() %>% 
-  mutate(prop.total = count/total) %>% 
-  rename("reference" = "cit_agency_author_specific")
-journal.counts <- df %>% 
-  filter(journalpub_match == T) %>% 
+  mutate(sum = nrow(identified.df), percent = round(100*count/sum, 2)) %>% 
+  rename("reference" = "cit_agency_author_specific",
+         "cit_type" = "cit_agency_author_level")
+
+journal.counts <- journal.df %>% 
   group_by(doc_owner_agency_level, cit_journal) %>% 
   count(cit_journal) %>% 
   rename("count" = "n") %>% 
   ungroup() %>% 
-  mutate(total = sum(count)) %>% 
-  ungroup() %>% 
-  mutate(prop.total = count/total) %>% 
-  rename("reference" = "cit_journal")
+  mutate(sum = nrow(identified.df), percent = round(100*count/sum, 2)) %>% 
+  rename("reference" = "cit_journal") %>% 
+  mutate(cit_type = "journal")
 
-agency.short <- agency.counts %>% select(-cit_agency_author_level)
-total.counts <- rbind(agency.short, journal.counts)
+total.counts <- rbind(agency.counts, journal.counts)
 
-
-
-state.ag <- agency.counts %>% 
+state <- total.counts %>% 
   filter(doc_owner_agency_level == "State") %>% 
-  mutate(n = sum(count), cit_type = cit_agency_author_level) %>% 
-  select(-cit_agency_author_level)
-state.j <- journal.counts %>% 
-  filter(doc_owner_agency_level == "State") %>% 
-  mutate(n = sum(count), cit_type = "journal") 
+  mutate(sum = sum(count), percent = round(100*count/sum, 2))
 
-state <- rbind(state.ag, state.j)
-
-state <- state %>% 
-  mutate(together.total = sum(unique(state$n))) %>% 
-  mutate(together.prop = count/together.total) 
-
-state.spread <- state %>% 
-  group_by(cit_type) %>% 
-  summarize(sum.prop = sum(together.prop)) %>% 
-  arrange(desc(sum.prop))
-
-state <- state %>%
-  top_n(15)
-
-region.ag <- agency.counts %>% 
+region <- total.counts %>% 
   filter(doc_owner_agency_level == "Regional") %>% 
-  mutate(n = sum(count), cit_type = cit_agency_author_level) %>% 
-  select(-cit_agency_author_level)
-region.j <- journal.counts %>% 
-  filter(doc_owner_agency_level == "Regional") %>% 
-  mutate(n = sum(count), cit_type = "journal") 
+  mutate(sum = sum(count), percent = round(100*count/sum, 2))
 
-region <- rbind(region.ag, region.j)
-
-region <- region %>% 
-  mutate(together.total = sum(unique(region$n))) %>% 
-  mutate(together.prop = count/together.total) 
-
-region.spread <- region %>% 
-  group_by(cit_type) %>% 
-  summarize(sum.prop = sum(together.prop)) %>% 
-  arrange(desc(sum.prop))
-
-region <- region %>% 
-  top_n(15)
-
-county.ag <- agency.counts %>% 
+county <- total.counts %>% 
   filter(doc_owner_agency_level == "County") %>% 
-  mutate(n = sum(count), cit_type = cit_agency_author_level) %>% 
-  select(-cit_agency_author_level)
-county.j <- journal.counts %>% 
-  filter(doc_owner_agency_level == "County") %>% 
-  mutate(n = sum(count), cit_type = "journal") 
+  mutate(sum = sum(count), percent = round(100*count/sum, 2))
 
-county <- rbind(county.ag, county.j)
-county <- county %>% 
-  mutate(together.total = sum(unique(county$n))) %>% 
-  mutate(together.prop = count/together.total)
+statetop <- state %>%
+  top_n(15) %>% 
+  arrange(-percent)
 
-county.spread <- county %>% 
-  group_by(cit_type) %>% 
-  summarize(sum.prop = sum(together.prop)) %>% 
-  arrange(desc(sum.prop))
+regiontop <- region %>% 
+  top_n(15) %>% 
+  arrange(-percent)
 
-county <- county %>% 
-  top_n(15)
+countytop <- county %>% 
+  top_n(15) %>% 
+  arrange(-percent)
 
-
-display.brewer.pal(8, "Greys")
 grey <- brewer.pal(8, "Greys")
 
-table(state$cit_type)
-state$cit_type <- factor(state$cit_type, levels = c("Federal", "State (CA)", "journal"))
-levels(state$cit_type) <- c("Agency: Federal", "Agency: State", "Academic journal")
-table(region$cit_type)
-region$cit_type <- factor(region$cit_type, levels = c("Federal", "State (CA)", "Regional", "journal"))
-levels(region$cit_type) <- c("Agency: Federal", "Agency: State", "Agency: Regional",  "Academic journal")
-table(county$cit_type)
-county$cit_type <- factor(county$cit_type, levels = c("Federal", "State (CA)", "Regional"))
-levels(county$cit_type) <- c("Agency: Federal", "Agency: State", "Agency: Regional")
-
 ## Categories as a proportion of each agency's total citation, plotted using function in functions.R
-st <- plot.theme.levels(state, "State", .11, colors = c(grey[6], grey[5], grey[3]), xlab = "") + theme(legend.position = "none") 
-rg <- plot.theme.levels(region, "Regional", .17, colors = c(grey[6], grey[5], grey[4], grey[3]), xlab = "") + theme(legend.position = "none")
-co <- plot.theme.levels(county, "County", .09, colors = c(grey[6], grey[5], grey[4]), xlab = "") + theme(legend.position = "none")
+# For colors
+table(statetop$cit_type) # federal, journal, state
+table(regiontop$cit_type) # federal, journal, regional, state
+table(countytop$cit_type) # federal, regional, state
+
+st <- plot.theme.levels(statetop, "State", 
+                         colors = c(grey[6], grey[3], grey[5]), xlab = "") + 
+  theme(legend.position = "none") +
+  scale_y_continuous(breaks=seq(0,10,5))
+rg <- plot.theme.levels(regiontop, "Regional", 
+                         colors = c(grey[6], grey[3], grey[4], grey[5]), xlab = "") + 
+  theme(legend.position = "none") +
+  scale_y_continuous(breaks=seq(0,16,8))
+co <- plot.theme.levels(countytop, "County", 
+                         colors = c(grey[6], grey[4], grey[5]), xlab = "") + 
+  theme(legend.position = "none") +
+  scale_y_continuous(breaks=seq(0,8,4))
+
 plot_grid(st, rg, co, ncol=3, label_size = 14, label_fontfamily = "Times", labels = c("A", "B", "C"))
 
-ggsave(filename = "plots/combined_level.png", width = 12, height = 5)
+ggsave(filename = "plots/fig6_combined_citations_by_level.png", width = 13, height = 5)
 
-## Table ----
 
-state.spread <- state.spread[-8,]
-total.props <- cbind(state.spread, region.spread, county.spread)
-total.props[2] <- round(total.props[2], 3)
-total.props[4] <- round(total.props[4], 3)
-total.props[6] <- round(total.props[6], 3)
+# NETWORK ----
 
-# 7. NETWORK ----
-# edgelist and nodelist ----
+edge.list <- identified.df %>% 
+  mutate(reference = case_when(
+    agency_citation == T ~ cit_agency_author_specific,
+    journalpub_match == T ~ cit_journal,
+    T ~ "error"
+  )) %>% 
+  select(doc_owner_agency, reference)
+
+edge.list$doc_owner_agency[edge.list$doc_owner_agency == "Caltrans"] <- "California Department of Transportation"
+
+edge.list.w <- edge.list %>% 
+  group_by(doc_owner_agency, reference) %>% count()
+table(edge.list.w$n)
+edge.list.w <- filter(edge.list.w, n > 2)
+
+nodes.doc.owners <- identified.df %>% 
+  select(doc_owner_agency, doc_owner_agency_level) %>% 
+  unique() %>% 
+  mutate("sjr" = NA)
+colnames(nodes.doc.owners) <- c("name", "agency_level", "sjr")
+
+nodes.doc.owners$agency_level[nodes.doc.owners$name == "Caltrans"] <- "State (CA)"
+nodes.doc.owners$name[nodes.doc.owners$name == "Caltrans"] <- "California Department of Transportation"
+
+nodes.agency.cits <- agency.df %>% 
+  filter(!is.na(cit_agency_author_specific)) %>% 
+  select(cit_agency_author_specific, cit_agency_author_level) %>% 
+  unique() %>% 
+  mutate("sjr" = NA)
+colnames(nodes.agency.cits) <- c("name", "agency_level", "sjr")
+
+nodes.journal.cits <- journal.df %>% 
+  select(cit_journal, cit_sjr) %>% 
+  unique() %>% 
+  rename("name" = "cit_journal", "sjr" = "cit_sjr") %>% 
+  mutate("agency_level" = NA) %>% 
+  select(name, agency_level, sjr)
+colnames(nodes.journal.cits) <- c("name", "agency_level", "sjr")
+
+
+node.list <- rbind(nodes.doc.owners, nodes.agency.cits, nodes.journal.cits)
+node.list <- distinct(node.list)
+
+net <- graph_from_data_frame(d = edge.list.w, vertices = node.list, directed = T) 
+
+clr <- RColorBrewer::brewer.pal(n = 8, name = "Set2")
+
+table(V(net)$agency_level)
+V(net)$color <- ifelse(V(net)$agency_level == "City", clr[1],
+                ifelse(V(net)$agency_level == "County", clr[2],
+                ifelse(V(net)$agency_level == "First Nations", clr[3],
+                ifelse(V(net)$agency_level == "Regional", clr[4],
+                ifelse(V(net)$agency_level == "State (CA)", clr[5],
+                ifelse(V(net)$agency_level == "State (Other)", clr[5],
+                ifelse(V(net)$agency_level == "Federal", clr[6],
+                ifelse(is.na(V(net)$agency_level), NA, clr[8]))))))))
+
+
+V(net)$indeg <- log(igraph::degree(net, mode="in")) +.5
+table(V(net)$indeg)
+V(net)$outdeg <- log(igraph::degree(net, mode="out")) +.5
+table(V(net)$outdeg)
+V(net)$alldeg <- log(igraph::degree(net, mode="all")) +.5
+table(V(net)$alldeg)
+
+V(net)$inlabel <- unname(ifelse(V(net)$indeg > 3.5, names(V(net)), "")) 
+V(net)$outlabel <- unname(ifelse(V(net)$outdeg > 3.9, names(V(net)), "")) 
+V(net)$alllabel <- unname(ifelse(V(net)$alldeg > 4, names(V(net)), "")) 
+V(net)$label.color = "black"
+V(net)$label.size = 2
+
+
+# Before choosing those with n >1, it was all one component, now I zero in on just the main component
+V(net)$comp <- igraph::components(net)$membership
+table(V(net)$comp)
+main <- induced_subgraph(net, V(net)$comp == 1)
+
+# In degree: who is getting cited?
+ggraph(main, layout="lgl") +
+  geom_edge_link(color = "gray50", alpha = 0.1) +
+  geom_node_point(color = V(main)$color, size= V(main)$indeg) + 
+  geom_node_text(aes(label = V(main)$inlabel), size = V(main)$label.size, 
+                 color=V(main)$label.color, repel=T) +
+  theme_void() 
+
+# Out degree: who is citing things
+ggraph(main, layout="lgl") +
+  geom_edge_link(color = "gray50", alpha = 0.1) +
+  geom_node_point(color = V(main)$color, size= V(main)$outdeg) + 
+  geom_node_text(aes(label = V(main)$outlabel), size = V(main)$label.size, 
+                 color=V(main)$label.color, repel=T) +
+  theme_void() 
+
+
+
 
 edge.list <- agency.df %>% filter(!is.na(cit_agency_author_specific)) %>% select(doc_owner_agency, cit_agency_author_specific) 
 edge.list.w <- edge.list %>% 

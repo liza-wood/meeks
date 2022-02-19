@@ -1,6 +1,6 @@
 library(tidyverse)
 library(data.table)
-source("code/descriptives/functions.R")
+source("code/functions.R")
 
 df <- readRDS("code/descriptives/transport_policy/clean-df.RDS")
 
