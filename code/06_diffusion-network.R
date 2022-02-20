@@ -1,3 +1,10 @@
+library(tidyverse)
+library(cowplot)
+library(data.table)
+library(RColorBrewer)
+library(igraph)
+library(ggraph)
+
 # NETWORK ----
 df <- readRDS("data/clean-df.RDS")
 
@@ -13,6 +20,9 @@ df$cit_agency_author_specific [df$cit_agency_author_specific == "Federal Highway
 df$cit_agency_author_specific [df$cit_agency_author_specific == "University of California"] <- "University of CA"
 df$cit_agency_author_specific [df$cit_agency_author_specific == "Department of Energy"] <- "US Dept. of Energy"
 df$cit_agency_author_specific [df$cit_agency_author_specific == "Geological Survey"] <- "US GS"
+
+df$cit_journal[df$cit_journal == "Transportation Research Part A: Policy and Practice"] <- "Transportation Research Pt. A"
+df$cit_journal[df$cit_journal == "Journal of Geotechnical and Geoenvironmental Engineering  ASCE"] <- "J. of Geotech. & Geoenvt. Engin."
 
 identified.df <- df %>% filter(identified.citation == T) 
 journal.df <- identified.df %>% filter(journalpub_match == T) 
@@ -169,8 +179,10 @@ maxcomp <- names(table(V(state.net)$comp))[table(V(state.net)$comp) == max(table
 state.main <- induced_subgraph(state.net, V(state.net)$comp == as.numeric(maxcomp))
 V(state.main)$core <- coreness(state.main)
 table(V(state.main)$core)
-sum(table(V(state.main)$core)[-c(1:7)])/sum(table(V(state.main)$core)) # the inner 34%
-state.main.core <- induced_subgraph(state.main, V(state.main)$core %in% c(16:1057))
+sum(table(V(state.main)$core)[-c(1:15)])/sum(table(V(state.main)$core)) # 20%
+sum(table(V(state.main)$core)[-c(1:15)]) # 99
+table(V(state.main)$core)[c(1:15)]
+state.main.core <- induced_subgraph(state.main, V(state.main)$core %in% c(17:1057))
 table(components(state.main.core)$membership)
 
 # In degree: who is getting cited?
@@ -233,7 +245,9 @@ region.main <- induced_subgraph(region.net, V(region.net)$comp == as.numeric(max
 V(region.main)$core <- coreness(region.main)
 table(V(region.main)$core)
 sum(table(V(region.main)$core)[-c(1:3)])/sum(table(V(region.main)$core))
-region.main.core <- induced_subgraph(region.main, V(region.main)$core %in% c(8:151))
+sum(table(V(region.main)$core)[-c(1:3)])
+table(V(region.main)$core)[c(1:3)]
+region.main.core <- induced_subgraph(region.main, V(region.main)$core %in% c(5:151))
 table(components(region.main.core)$membership)
 
 # In degree: who is getting cited?
@@ -295,8 +309,10 @@ maxcomp <- names(table(V(county.net)$comp))[table(V(county.net)$comp) == max(tab
 county.main <- induced_subgraph(county.net, V(county.net)$comp == as.numeric(maxcomp))
 V(county.main)$core <- coreness(county.main)
 table(V(county.main)$core)
-sum(table(V(county.main)$core)[-c(1:3)])/sum(table(V(county.main)$core))
-county.main.core <- induced_subgraph(county.main, V(county.main)$core %in% c(8:77))
+sum(table(V(county.main)$core)[-c(1:5)])/sum(table(V(county.main)$core))
+sum(table(V(county.main)$core)[-c(1:5)])
+table(V(county.main)$core)[c(1:5)]
+county.main.core <- induced_subgraph(county.main, V(county.main)$core %in% c(7:77))
 table(components(county.main.core)$membership)
 
 # In degree: who is getting cited?
@@ -310,4 +326,4 @@ county <- ggraph(county.main.core, layout = "lgl") +
 
 
 plot_grid(state, region, county, nrow = 1)
-ggsave(filename = "plots/alt-fig6_networks.png", width = 10, height = 3)
+ggsave(filename = "plots/alt-fig6_networks.png", width = 12, height = 4)

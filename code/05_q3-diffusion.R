@@ -79,13 +79,40 @@ state <- total.counts %>%
   filter(doc_owner_agency_level == "State") %>% 
   mutate(sum = sum(count), percent = round(100*count/sum, 2))
 
+# What percent of state documents have what levels references
+state %>% 
+  group_by(cit_type) %>% 
+  mutate(n = sum(count)) %>% 
+  mutate(prop = n/sum) %>% 
+  select(cit_type, n, sum, prop) %>% 
+  unique() %>% 
+  arrange(-n)
+
 region <- total.counts %>% 
   filter(doc_owner_agency_level == "Regional") %>% 
   mutate(sum = sum(count), percent = round(100*count/sum, 2))
 
+# What percent of region documents have what levels references
+region %>% 
+  group_by(cit_type) %>% 
+  mutate(n = sum(count)) %>% 
+  mutate(prop = n/sum) %>% 
+  select(cit_type, n, sum, prop) %>% 
+  unique() %>% 
+  arrange(-n)
+
 county <- total.counts %>% 
   filter(doc_owner_agency_level == "County") %>% 
   mutate(sum = sum(count), percent = round(100*count/sum, 2))
+
+# What percent of county documents have what levels references
+county %>% 
+  group_by(cit_type) %>% 
+  mutate(n = sum(count)) %>% 
+  mutate(prop = n/sum) %>% 
+  select(cit_type, n, sum, prop) %>% 
+  unique() %>% 
+  arrange(-n)
 
 statetop <- state %>%
   top_n(15) %>% 

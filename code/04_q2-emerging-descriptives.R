@@ -28,7 +28,9 @@ its <- df %>%
 its %>% select(doc.id) %>% unique() %>% nrow()
 identified.its <- its %>% filter(identified.citation == T) # 245 citations
 journal.its <- identified.its %>% filter(journalpub_match == T) # 41 to journals
+nrow(journal.its)/nrow(identified.its)
 agency.its <- identified.its %>% filter(agency_citation == T) # 204 to agencies
+nrow(agency.its)/nrow(identified.its)
 
 # Number of unique journals
 journal.its %>% select(cit_journal) %>% unique() %>% nrow() # 23 unique journals
@@ -47,8 +49,10 @@ agency.cc <- identified.cc %>% filter(agency_citation == T) # 956 to agencies
 
 # Number of unique journals
 journal.cc %>% select(cit_journal) %>% unique() %>% nrow() # 199 unique journals
+nrow(journal.cc)/nrow(identified.cc)
 # Number of unique agencies
 agency.cc %>% select(cit_agency_author_specific) %>% unique() %>% nrow() # 94 unique agencies
+nrow(agency.cc)/nrow(identified.cc)
 
 # ---------------------------------------------------------------------#
 # Creating Table 4
@@ -66,6 +70,7 @@ agency.df <- identified.df %>% filter(agency_citation == T)
 # Number of academic citations and unique journals
 nrow(journal.df) # 674
 journal.df %>% select(cit_journal) %>% unique() %>% nrow() # 207 unique journals
+nrow(journal.df)/nrow(identified.df)
 
 # Also for table: Number of documents with identified citations, by level
 identified.df %>% select(doc.id) %>% unique %>% nrow()
@@ -76,6 +81,15 @@ identified.df %>%
   unique() %>% 
   count() %>% 
   rename("total_id_docs" = "n")
+
+# In text: top journal across all levels 
+df %>% 
+  filter(journalpub_match == T) %>% 
+  group_by(cit_journal) %>% count() %>% 
+  ungroup() %>% 
+  mutate(sum = sum(n)) %>% 
+  mutate(prop = n/sum) %>% 
+  arrange(-prop)
 
 # ---------------------------------------------------------------------#
 # Table 4A, part 1. Journal citations by agency level
@@ -97,15 +111,6 @@ nrow(journal.df)/nrow(identified.df)
 unique(journalmatch.top$sum[journalmatch.top$doc_owner_agency_level == "State"])/nrow(identified.df[identified.df$doc_owner_agency_level == "State"])
 unique(journalmatch.top$sum[journalmatch.top$doc_owner_agency_level == "Regional"])/nrow(identified.df[identified.df$doc_owner_agency_level == "Regional"])
 unique(journalmatch.top$sum[journalmatch.top$doc_owner_agency_level == "County"])/nrow(identified.df[identified.df$doc_owner_agency_level == "County"])
-
-
-# In text: top journal across all levels 
-journalmatch.count <- df %>% 
-  filter(journalpub_match == T) %>% 
-  group_by(cit_journal) %>% count() %>% 
-  ungroup() %>% 
-  mutate(sum = sum(n)) %>% 
-  mutate(prop = n/sum)
 
 # ---------------------------------------------------------------------#
 # Appending scimago rankings
@@ -220,6 +225,16 @@ prop.cat.df.nolevel <- jcats.long %>%
 # Number of agency citations and unique agencies
 nrow(agency.df)
 agency.df %>% select(cit_agency_author_specific) %>% unique() %>% nrow() # 256 unique agencies
+
+# In text: top agency across all levels 
+df %>% 
+  filter(agency_citation == T) %>% 
+  group_by(cit_agency_author_specific) %>% 
+  count() %>% 
+  ungroup() %>% 
+  mutate(sum = sum(n)) %>% 
+  mutate(prop = n/sum) %>% 
+  arrange(-prop)
 
 # ---------------------------------------------------------------------#
 # Table 4b Agency citations by agency level
