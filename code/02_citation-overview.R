@@ -2,9 +2,9 @@ library(tidyverse)
 library(data.table)
 source("code/functions.R")
 
-df <- readRDS("code/descriptives/transport_policy/clean-df.RDS")
+df <- readRDS("data/clean-df.RDS")
 
-# Note: Figure 2 in Section 4.2 is in the 01_agency_doc_descriptives
+# Note: Figure 1 in Section 4.2 is in the 01_agency_doc_descriptives
 # ---------------------------------------------------------------------#
 # Section 4.3
 # ---------------------------------------------------------------------#
@@ -93,7 +93,7 @@ cit.numbers.counts %>% group_by(condensed) %>%
 
 
 # ---------------------------------------------------------------------#
-# Data prep for figure 3
+# Data prep for figure 2
 # ---------------------------------------------------------------------#
 
 # I want to focus just on documents, but in this section I make sure I am focusing in on documents without any duplicates
@@ -156,6 +156,23 @@ subject.summary <- docs.unique %>%
   group_by(doc_subject) %>% 
   mutate(ndoc_total = sum(n), prop = n/ndoc_total) %>% 
   filter(identified.citation == "Yes") 
+
+# For figure 3 text: what subject was percentage for each level?
+subject.summary.by.level <- docs.unique %>% 
+  group_by(doc_owner_agency_level, doc_subject) %>%
+  count()  %>% 
+  ungroup() %>% 
+  group_by(doc_owner_agency_level) %>% 
+  mutate(ndoc_total = sum(n), prop = n/ndoc_total)
+
+# For discussion text
+subject.summary.by.level.cit <- docs.unique %>% 
+  group_by(doc_owner_agency_level, doc_subject, identified.citation) %>%
+  count()  %>% 
+  filter(identified.citation == "Yes") %>% 
+  ungroup() %>% 
+  group_by(doc_owner_agency_level) %>% 
+  mutate(ndoc_total = sum(n), prop = n/ndoc_total)
 
 # Plot of documents with citations out of total documents
 p1 <- plot_counts_aesfill(docs.unique, 

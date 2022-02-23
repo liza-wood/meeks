@@ -53,7 +53,7 @@ journalmatch.top <- identified.df %>%
   ungroup() %>% 
   group_by(doc_owner_agency_level) %>% 
   mutate(sum = sum(n), prop = n/sum) %>% 
-  top_n(10) %>% 
+  top_n(5) %>% 
   arrange(doc_owner_agency_level, -prop)
 
 # In text: What percentage of identified do academic citations account for?
