@@ -19,7 +19,7 @@ plot.theme.levels <- function(df, plot_title, ylim, colors, xlab){
     geom_bar(aes(x = reorder(reference, -percent), y = percent, fill = cit_type), 
              position = "dodge", stat = "identity") + 
     scale_fill_manual(values = colors) +
-    labs(x = xlab, y = "Percent of citations", fill = "", title = plot_title) + 
+    labs(x = xlab, y = "Percent of references", fill = "", title = plot_title) + 
     theme_minimal() + 
     theme(text= element_text(size=14, family="Times"), 
           plot.title = element_text(hjust = .5, vjust = 0, size = 14)) +

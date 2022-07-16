@@ -144,7 +144,7 @@ prop.cat.df <- jcats.long %>%
   arrange(doc_owner_agency_level, -prop)
 
 # ---------------------------------------------------------------------#
-# Figure 5. Scimago ranking plot
+# Figure 4. Scimago ranking plot
 # ---------------------------------------------------------------------#
 
 citrank.count <- df %>% 
@@ -180,11 +180,11 @@ citrank.count %>%
     plot.title = element_text(hjust = .5, vjust = 0, size = 16), 
     strip.background  = element_blank()) +
   labs(x = "Average journal ranking (SJR)", 
-       y = "Number of citations",
+       y = "Number of references",
        fill = "")
 
 # Figure 5 saving
-ggsave(filename = "plots/fig5_sjr_by_citation.png", width = 6, height = 3)
+ggsave(filename = "plots/fig4_sjr_by_citation.png", width = 6, height = 3)
 
 
 

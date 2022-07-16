@@ -1,10 +1,11 @@
 library(tidyverse)
 library(data.table)
+library(cowplot)
 source("code/functions.R")
 
 df <- readRDS("data/clean-df.RDS")
 
-# Note: Figure 1 in Section 4.2 is in the 01_agency_doc_descriptives
+# Note: Figure 1 in Section 4.2 is in truckee's descriptives/01_agency_doc_descriptives
 # ---------------------------------------------------------------------#
 # Section 4.3
 # ---------------------------------------------------------------------#
@@ -143,7 +144,7 @@ levels(docs.unique$identified.citation) <- c("No", "Yes")
 length(unique(docs.unique$file))
 
 # ---------------------------------------------------------------------#
-# Figure 3
+# Figure 2
 # ---------------------------------------------------------------------#
 
 # Subjects of documents
@@ -157,7 +158,7 @@ subject.summary <- docs.unique %>%
   mutate(ndoc_total = sum(n), prop = n/ndoc_total) %>% 
   filter(identified.citation == "Yes") 
 
-# For figure 3 text: what subject was percentage for each level?
+# For figure 2 text: what subject was percentage for each level?
 subject.summary.by.level <- docs.unique %>% 
   group_by(doc_owner_agency_level, doc_subject) %>%
   count()  %>% 
@@ -182,7 +183,7 @@ p1 <- plot_counts_aesfill(docs.unique,
                           xlab = "Number of documents", 
                           title = "Documents by subject") + 
   scale_fill_manual(values=c("lightgray", "#808080")) + 
-  labs(fill = "Has\ncitation") +
+  labs(fill = "Has\nreference") +
   theme(legend.position = "none")
 
 # Types of documents
@@ -202,7 +203,7 @@ p2 <- plot_counts_aesfill(docs.unique,
                           xlab = "Number of documents", 
                           title = "Documents by type") + 
   scale_fill_manual(values=c("lightgray", "#808080")) + 
-  labs(fill = "Has\ncitation") +
+  labs(fill = "Has\nreference") +
   theme(legend.position = "none")
 
 # Agency documents
@@ -225,7 +226,7 @@ p3 <- plot_counts_aesfill(docs.unique,
                           title = "Documents by agency level") + 
   scale_fill_manual(values=c("lightgray", "#808080")) + 
   scale_x_continuous(breaks=seq(0,2600,650)) +
-  labs(fill = "Has\ncitation")
+  labs(fill = "Has\nreference")
 
 ## A look at state types: Research accounts for 95% of documents
 docs.unique %>% 
@@ -244,7 +245,7 @@ docs.unique %>%
   mutate(ndoc_total = sum(n), prop = n/ndoc_total) %>% 
   filter(identified.citation == "Yes")
 
-# Figure 3 compiled
+# Figure 2 compiled
 plot_grid(p1, p2, p3, ncol=3, label_size = 10, label_fontfamily = "Times", labels = c("A", "B", "C"))
 
 percent_docs_w_citations <- ggdraw() + 
@@ -255,10 +256,10 @@ percent_docs_w_citations <- ggdraw() +
   draw_plot(p3, x= .7, y=, width= .3, height = 1) +
   draw_plot_label("C", x = .7, family = "Times")
 
-ggsave(filename = "plots/fig3_percent_docs_w_citations.png", plot = percent_docs_w_citations, width = 14, height = 4)
+ggsave(filename = "plots/fig2_percent_docs_w_citations.png", plot = percent_docs_w_citations, width = 14, height = 4)
 
 # ---------------------------------------------------------------------#
-# Figure 4
+# Figure 3
 # ---------------------------------------------------------------------#
 
 # Will use this dataframe, which is every identified citation
@@ -287,8 +288,8 @@ p4 <- plot_counts_aesfill(docs.w.cit,
                           y = docs.w.cit$doc_subject, 
                           fill = docs.w.cit$citation_type, 
                           ylab = "", 
-                          xlab = "Number of citations",
-                          title = "Citations by document subject") + 
+                          xlab = "Number of references",
+                          title = "References by document subject") + 
   scale_fill_manual(values=c("lightgray", "#808080")) +
   scale_x_continuous(breaks=seq(0,5500,2750)) +
   theme(legend.position = "none",
@@ -309,8 +310,8 @@ p5 <- plot_counts_aesfill(docs.w.cit,
                           y = docs.w.cit$doc_type, 
                           fill = docs.w.cit$citation_type, 
                           ylab = "", 
-                          xlab = "Number of citations",
-                          title = "Citations by document type") + 
+                          xlab = "Number of references",
+                          title = "References by document type") + 
   scale_fill_manual(values=c("lightgray", "#808080")) + 
   scale_x_continuous(breaks=seq(0,10000,5000)) +
   theme(legend.position = "none",
@@ -330,11 +331,11 @@ p6 <- plot_counts_aesfill(docs.w.cit,
                           y = docs.w.cit$doc_owner_agency_level,
                           fill = docs.w.cit$citation_type, 
                           ylab = "", 
-                          xlab = "Number of citations",
-                          title = "Citations by agency level") +
+                          xlab = "Number of references",
+                          title = "References by agency level") +
   scale_fill_manual(values=c("lightgray", "#808080")) + 
   scale_x_continuous(breaks=seq(0,10000,5000)) +
-  labs(fill = "Citation\ntype") 
+  labs(fill = "Reference\ntype") 
 
 # State exploration -- of all the citations, how many did the state account for?
 docs.w.cit %>% 
@@ -357,7 +358,7 @@ summary <- docs.w.cit %>%
   count() %>% 
   mutate(prop = n/sum(n))
 
-# Figure 4 compiled
+# Figure 3 compiled
 
 percent_citations_as_agency <- ggdraw() + 
   draw_plot(p4, x = 0, y = 0, width = .375, height = 1) +
@@ -367,5 +368,5 @@ percent_citations_as_agency <- ggdraw() +
   draw_plot(p6, x= .7, y=, width= .3, height = 1) +
   draw_plot_label("C", x = .7, family = "Times")
 
-ggsave(filename = "plots/fig4_percent_citations_as_agency.png", plot = percent_citations_as_agency, width = 14, height = 4)
+ggsave(filename = "plots/fig3_percent_citations_as_agency.png", plot = percent_citations_as_agency, width = 14, height = 4)
 

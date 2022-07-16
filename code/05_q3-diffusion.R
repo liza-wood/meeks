@@ -146,9 +146,21 @@ co <- plot.theme.levels(countytop, "County",
                          colors = c(grey[6], grey[4], grey[5]), xlab = "") + 
   theme(legend.position = "none") +
   scale_y_continuous(breaks=seq(0,8,4))
+regiontop$cit_type <- factor(regiontop$cit_type, levels = c("Federal", "State (CA)",
+                                                            "Regional", "journal"))
+table(regiontop$cit_type)
+levels(regiontop$cit_type) <- c("Agency: Federal", "Agency: State",
+                                 "Agency: Regional", "Academic journal")
+table(regiontop$cit_type)
+legend <- get_legend(plot.theme.levels(regiontop, "Regional", 
+                                       colors = c(grey[6], grey[3], grey[4], grey[5]), 
+                                       xlab = "") +
+                       theme(legend.direction="horizontal"))
 
 plot_grid(st, rg, co, ncol=3, label_size = 14, label_fontfamily = "Times", labels = c("A", "B", "C"))
+ggsave(filename = "plots/fig5_combined_citations_by_level.png", width = 13, height = 5)
+plot_grid(legend)
+ggsave(filename = "plots/fig5_legend.png", width = 6, height = .5)
 
-ggsave(filename = "plots/fig6_combined_citations_by_level.png", width = 13, height = 5)
 
 
